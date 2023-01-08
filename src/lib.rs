@@ -26,4 +26,8 @@ impl World {
     pub fn get_resource_mut<T: Any>(&mut self) -> Option<&mut T> {
         self.resources.get_mut::<T>()
     }
+
+    pub fn delete_resource<T: Any>(&mut self) {
+        self.resources.remove::<T>()
+    }
 }
