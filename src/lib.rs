@@ -21,4 +21,9 @@ impl World {
     pub fn get_resource<T: Any>(&self) -> Option<&T> {
         self.resources.get_ref::<T>()
     }
+
+    /// Query of a resource and get a mutable to it. The type of the resource must be added.
+    pub fn get_resource_mut<T: Any>(&mut self) -> Option<&mut T> {
+        self.resources.get_mut::<T>()
+    }
 }

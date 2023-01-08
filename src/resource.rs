@@ -22,6 +22,13 @@ impl Resource {
         }
         None
     }
+    pub fn get_mut<T: Any>(&mut self) -> Option<&mut T> {
+        let type_id = TypeId::of::<T>();
+        if let Some(data) = self.data.get_mut(&type_id) {
+            return data.downcast_mut();
+        }
+        None
+    }
 }
 
 #[cfg(test)]
@@ -42,6 +49,14 @@ mod test {
         let resources = initialize_resource();
         let extracted_world_width = resources.get_ref::<WorldWidth>().unwrap();
         assert_eq!(extracted_world_width.0, 100.0);
+    }
+
+    #[test]
+    fn get_resource_mut() {
+        let mut resources = initialize_resource();
+        let world_width = resources.get_mut::<WorldWidth>().unwrap();
+        world_width.0 = 55f32;
+        assert_eq!(world_width.0, 55f32);
     }
 }
 
