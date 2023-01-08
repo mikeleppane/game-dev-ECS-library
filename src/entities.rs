@@ -9,8 +9,13 @@ pub struct Entities {
 }
 
 impl Entities {
-    pub fn register_component<T: Any>(&mut self) {
+    pub fn register_component<T: Any + Sized>(&mut self) {
         self.components.insert(TypeId::of::<T>(), vec![]);
+    }
+    pub fn create_entity(&mut self) {
+        self.components
+            .iter_mut()
+            .for_each(|(key, component)| component.push(None));
     }
 }
 
@@ -29,5 +34,20 @@ mod test {
         assert_eq!(health_components.len(), 0);
     }
 
+    #[test]
+    fn create_entity() {
+        let mut entities = Entities::default();
+        entities.register_component::<Health>();
+        entities.register_component::<Speed>();
+        entities.create_entity();
+        let health = entities.components.get(&TypeId::of::<Health>()).unwrap();
+        let speed = entities.components.get(&TypeId::of::<Speed>()).unwrap();
+        assert_eq!(health.len(), speed.len());
+        assert_eq!(health.len(), 1);
+        assert!(health[0].is_none());
+        assert!(speed[0].is_none());
+    }
+
     struct Health(u32);
+    struct Speed(u32);
 }
