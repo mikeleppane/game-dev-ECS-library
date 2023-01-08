@@ -2,6 +2,7 @@ use std::any::Any;
 
 use crate::resource::Resource;
 
+mod entities;
 mod resource;
 
 #[derive(Default)]
