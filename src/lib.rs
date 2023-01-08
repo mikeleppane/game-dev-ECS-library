@@ -1,8 +1,10 @@
 use std::any::Any;
 
+use crate::entities::query::Query;
 use crate::entities::Entities;
 use crate::resource::Resource;
 
+mod custom_errors;
 mod entities;
 mod resource;
 
@@ -40,5 +42,9 @@ impl World {
 
     pub fn create_entity(&mut self) -> &mut Entities {
         self.entities.create_entity()
+    }
+
+    pub fn query(&self) -> Query {
+        Query::new()
     }
 }

@@ -3,17 +3,24 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use color_eyre::eyre::bail;
 use color_eyre::Result;
+
+use crate::custom_errors::CustomErrors;
+
+pub mod query;
 
 #[derive(Debug, Default)]
 pub struct Entities {
     components: HashMap<TypeId, Vec<Option<Rc<RefCell<dyn Any>>>>>,
+    bit_masks: HashMap<TypeId, u32>,
 }
 
 impl Entities {
     pub fn register_component<T: Any>(&mut self) {
-        self.components.insert(TypeId::of::<T>(), vec![]);
+        let type_id = TypeId::of::<T>();
+        let bit_mask = 2u32.pow(self.bit_masks.len() as u32);
+        self.components.insert(type_id, vec![]);
+        self.bit_masks.insert(type_id, bit_mask);
     }
     pub fn create_entity(&mut self) -> &mut Self {
         self.components
@@ -27,11 +34,10 @@ impl Entities {
         if let Some(components) = self.components.get_mut(&type_id) {
             let last_component = components
                 .last_mut()
-                .ok_or("last component not loadable")
-                .unwrap();
+                .ok_or(CustomErrors::CreateComponentNeverCalled)?;
             *last_component = Some(Rc::new(RefCell::new(data)));
         } else {
-            bail!("attempted to insert data for component that wasn't registered")
+            return Err(CustomErrors::ComponentNotRegistered.into());
         }
         Ok(self)
     }
@@ -51,6 +57,25 @@ mod test {
         let type_id = TypeId::of::<Health>();
         let health_components = entities.components.get(&type_id).unwrap();
         assert_eq!(health_components.len(), 0);
+    }
+
+    #[test]
+    fn bitmask_updated_when_registering_entities() {
+        let mut entities = Entities::default();
+        entities.register_component::<Health>();
+        let type_id = TypeId::of::<Health>();
+        let health_mask = entities.bit_masks.get(&type_id).unwrap();
+        assert_eq!(*health_mask, 1);
+
+        entities.register_component::<Speed>();
+        let type_id = TypeId::of::<Speed>();
+        let mask = entities.bit_masks.get(&type_id).unwrap();
+        assert_eq!(*mask, 2);
+
+        entities.register_component::<Speed>();
+        let type_id = TypeId::of::<Speed>();
+        let mask = entities.bit_masks.get(&type_id).unwrap();
+        assert_eq!(*mask, 4);
     }
 
     #[test]
